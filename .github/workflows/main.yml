@@ -1,3 +1,145 @@
+{
+  "name": "nodejs-cicd-sample",
+  "version": "1.0.0",
+  "description": "Minimal Node.js app with CI/CD (GitHub Actions) example",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest --runInBand --coverage",
+    "lint": "eslint .",
+    "docker-build": "docker build -t nodejs-cicd-sample:local ."
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.44.0",
+    "jest": "^29.7.0",
+    "nodemon": "^2.0.22",
+    "supertest": "^6.4.4"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageDirectory": "./coverage"
+  }
+}
+const express = require('express');
+const app = express();
+
+// Basic JSON API
+app.get('/', (req, res) => {
+  res.json({ message: 'Hello from Node CI/CD sample' });
+});
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.get('/users', (req, res) => {
+  res.json([
+    { id: 1, name: 'Alice' },
+    { id: 2, name: 'Bob' }
+  ]);
+});
+
+// Start server if run directly
+if (require.main === module) {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
+
+module.exports = app;
+const request = require('supertest');
+const app = require('../index');
+
+describe('Basic API', () => {
+  test('GET / should return message', async () => {
+    const res = await request(app).get('/');
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('message');
+  });
+
+  test('GET /health should return ok', async () => {
+    const res = await request(app).get('/health');
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({ status: 'ok' });
+  });
+
+  test('GET /users should return array of users', async () => {
+    const res = await request(app).get('/users');
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThan(0);
+  });
+});
+module.exports = {
+  env: {
+    node: true,
+    es2021: true,
+    jest: true
+  },
+  extends: 'eslint:recommended',
+  parserOptions: {
+    ecmaVersion: 12
+  },
+  rules: {
+    'no-unused-vars': ['warn'],
+    'no-console': 'off',
+    'consistent-return': 'off'
+  }
+};
+# Simple Dockerfile for the Node.js app
+FROM node:20-alpine
+
+# Create app directory
+WORKDIR /usr/src/app
+
+# Copy package.json and package-lock.json if present
+COPY package*.json ./
+
+# Install production dependencies only
+RUN npm ci --only=production
+
+# Bundle app source
+COPY . .
+
+ENV NODE_ENV=production
+EXPOSE 3000
+
+CMD ["node", "index.js"]
+node_modules
+npm-debug.log
+coverage
+.git
+```markdown
+# Node.js CI/CD Sample
+
+This repository is a minimal Node.js (Express) web app with CI/CD via GitHub Actions. It includes:
+
+- A simple Express API (index.js)
+- Tests using Jest + Supertest
+- ESLint config
+- Dockerfile to build a container image
+- GitHub Actions workflow to lint, test, build and push Docker image to GitHub Container Registry (GHCR)
+
+Quick start (local):
+1. Install deps: `npm ci`
+2. Run tests: `npm test`
+3. Run locally: `npm start` (server on port 3000)
+4. Run in Docker: `docker build -t nodejs-cicd-sample .` then `docker run -p 3000:3000 nodejs-cicd-sample`
+
+CI notes:
+- The workflow `.github/workflows/main.yml` runs on push and pull_request.
+- It runs lint, tests, and builds & pushes a Docker image to GHCR as `ghcr.io/<OWNER>/<REPO>:<sha>` and `:latest` on the default branch.
+- To push to Docker Hub instead, create `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` repo secrets and modify the workflow.
+
+If you'd like automated deployments (VPS via SSH, Kubernetes, or a cloud host) tell me which target and I will add deployment steps.
+```
 name: CI/CD
 
 on:
