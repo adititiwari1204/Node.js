@@ -30,8 +30,7 @@ const express = require('express');
 const app = express();
 
 // Basic JSON API
-app.get('/', (req, res) => {
-  res.json({ message: 'Hello from Node CI/CD sample' });
+app.get('/', (req, res) => { res.json({ message: 'Hello from Node CI/CD sample' });
 });
 
 app.get('/health', (req, res) => {
