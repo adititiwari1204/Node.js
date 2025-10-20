@@ -1,6 +1,4 @@
-Simple node.js web app
-
-name: Docker image
+name: Simple node.js web app
 
 # Controls when the workflow will run
 on:
@@ -10,8 +8,8 @@ on:
   pull_request:
     branches: [ "main" ]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+env: 
+  MONGODB_URL: ${{ secrets.MONGODB_URL }} 
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -27,11 +25,11 @@ jobs:
         name: Build the Docker image
         run: docker build -t emp .
         name: Tag the docker image
-        run : docker tag emp adititiwari1204/Node.js
-        name : Docker login
-        run : docker login -u ${{ secrets.Docker_USERNAME }} -p ${{ secrets.Docker_PASSWORD }}
-        name : docker push
-        run : docker push adititiwari1204/Node.js
+        run: docker tag emp adititiwari1204/Node.js
+        name: Docker login
+        run: docker login -u ${{ secrets.Docker_USERNAME }} -p ${{ secrets.Docker_PASSWORD }}
+        name: docker push
+        run: docker push adititiwari1204/Node.js
       # Runs a single command using the runners shell
       - name: Run a one-line script
         run: echo Hello, world!
